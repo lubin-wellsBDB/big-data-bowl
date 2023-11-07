@@ -1,2 +1,5 @@
 # Data
 *.csv
+
+# Virtual Environment
+/.venv
