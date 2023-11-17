@@ -65,6 +65,7 @@ if __name__ == "__main__":
                 if mirror:
                     play["x"] *= -1
                     play["y"] *= -1
+                    play["y"] += 50
 
                 # get players, and initialize things to store their positions
                 players = play.displayName.unique()
@@ -98,11 +99,7 @@ if __name__ == "__main__":
                 
                 # create line of scrimmage
                 scrimX = [0, 0, 0]
-                scrimY = []
-                if mirror:
-                    scrimY = [0, -25, -50]
-                else:
-                    scrimY = [0, 25, 50]
+                scrimY = [0, 25, 50]
                 
                 lines.append(ax.plot(scrimX, scrimY, color="orange")[0])
 
