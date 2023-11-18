@@ -113,5 +113,5 @@ if __name__ == "__main__":
                     lines[-1].set_ydata(scrimY)
                     return tuple(lines)
 
-                ani = animation.FuncAnimation(fig=fig, func=update, frames=frames, interval=100)
+                ani = animation.FuncAnimation(fig=fig, func=update, frames=frames, interval=200)
                 plt.show()

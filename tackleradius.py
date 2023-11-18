@@ -52,12 +52,28 @@ if __name__ == "__main__":
                 tackle_frame = tackler_track[tackler_track["event"] == "tackle"]["frameId"].iat[0]
 
                 # find distance frame
-                frame_of_interest = max(tackle_frame - frames_out, 1)
+                frame_of_tackle = max(tackle_frame - frames_out, 1)
 
                 # find tackler and carrier info in that frame
-                tackler_frame = tackler_track[tackler_track["frameId"] == frame_of_interest]
-                carrier_frame = carrier_track[carrier_track["frameId"] == frame_of_interest]
+                tackler_frame = tackler_track[tackler_track["frameId"] == frame_of_tackle]
+                carrier_frame = carrier_track[carrier_track["frameId"] == frame_of_tackle]
 
+                # # if we cant find start frame, skip
+                # if not carrier_track[carrier_track["event"] == "run"].empty:
+                #     start_frame = carrier_track[carrier_track["event"] == "run"]["frameId"].iat[0]
+                # elif not carrier_track[carrier_track["event"] == "handoff"].empty:
+                #     start_frame = carrier_track[carrier_track["event"] == "handoff"]["frameId"].iat[0]
+                # elif not carrier_track[carrier_track["event"] == "pass_outcome_caught"].empty:
+                #     start_frame = carrier_track[carrier_track["event"] == "pass_outcome_caught"]["frameId"].iat[0]
+                # else:
+                #     continue
+                    
+                
+
+                # tackler_start = tackler_track[tackler_track["frameId"] == start_frame]
+                # carrier_start = carrier_track[carrier_track["frameId"] == start_frame]
+
+                # math.sqrt((tackler_start["x"].iat[0] - carrier_start["x"].iat[0]) ** 2 + (tackler_start["y"].iat[0] - carrier_start["y"].iat[0]) ** 2)
                 distances.append(math.sqrt((tackler_frame["x"].iat[0] - carrier_frame["x"].iat[0]) ** 2 + (tackler_frame["y"].iat[0] - carrier_frame["y"].iat[0]) ** 2))
         
         print(max(distances))
