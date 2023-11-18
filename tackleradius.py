@@ -2,13 +2,11 @@ import pandas as pd
 import math
 
 if __name__ == "__main__":
-    tackles = pd.read_csv("data/tackles.csv")
+    tackles = pd.read_csv("data/tackles_bc_id.csv")
     weeks = []
 
     for week in range(1, 10):
         weeks.append(pd.read_csv(f"data/tracking_week_{week}.csv"))
-    
-    plays = pd.read_csv("data/plays.csv")
 
     seconds_out = .5
     frames_out = int(seconds_out * 10)
@@ -21,7 +19,7 @@ if __name__ == "__main__":
         
         id = int(strid)
 
-        player_tackles = tackles[tackles["nflId"] == id][tackles["pff_missedTackle"] == 0]
+        player_tackles = tackles.loc[tackles["nflId"] == id].loc[tackles["pff_missedTackle"] == 0]
 
         if player_tackles.empty:
             print("Player has no tackles")
@@ -31,40 +29,33 @@ if __name__ == "__main__":
 
         for week in weeks:
             for row in player_tackles.itertuples():
-                play = week[week["gameId"] == row.gameId][week["playId"] == row.playId]
+                play = week[week["gameId"] == row.gameId].loc[week["playId"] == row.playId].loc
                 if play.empty:
                     # wrong week
                     continue
 
-                play_data = plays[plays["gameId"] == row.gameId][plays["playId"] == row.playId]
-
-                # if we can't find ball carrier, skip
-                if play_data.empty:
-                    continue
-                ball_carrier = play_data["ballCarrierId"].iat[0]
-
-                tackler_track = play[play["nflId"] == id]
-                carrier_track = play[play["nflId"] == ball_carrier]
+                tackler_track = play.loc[play["nflId"] == id]
+                carrier_track = play.loc[play["nflId"] == row.ballCarrierId]
 
                 # if we cant find tackle_frame, skip
-                if tackler_track[tackler_track["event"] == "tackle"].empty:
+                if tackler_track.loc[tackler_track["event"] == "tackle"].empty:
                     continue
-                tackle_frame = tackler_track[tackler_track["event"] == "tackle"]["frameId"].iat[0]
+                tackle_frame = tackler_track.loc[tackler_track["event"] == "tackle"]["frameId"].iat[0]
 
                 # find distance frame
                 frame_of_tackle = max(tackle_frame - frames_out, 1)
 
                 # find tackler and carrier info in that frame
-                tackler_frame = tackler_track[tackler_track["frameId"] == frame_of_tackle]
-                carrier_frame = carrier_track[carrier_track["frameId"] == frame_of_tackle]
+                tackler_frame = tackler_track.loc[tackler_track["frameId"] == frame_of_tackle]
+                carrier_frame = carrier_track.loc[carrier_track["frameId"] == frame_of_tackle]
 
                 # # if we cant find start frame, skip
-                # if not carrier_track[carrier_track["event"] == "run"].empty:
-                #     start_frame = carrier_track[carrier_track["event"] == "run"]["frameId"].iat[0]
-                # elif not carrier_track[carrier_track["event"] == "handoff"].empty:
-                #     start_frame = carrier_track[carrier_track["event"] == "handoff"]["frameId"].iat[0]
-                # elif not carrier_track[carrier_track["event"] == "pass_outcome_caught"].empty:
-                #     start_frame = carrier_track[carrier_track["event"] == "pass_outcome_caught"]["frameId"].iat[0]
+                # if not carrier_track.loc[carrier_track["event"] == "run"].empty:
+                #     start_frame = carrier_track.loc[carrier_track["event"] == "run"]["frameId"].iat[0]
+                # elif not carrier_track.loc[carrier_track["event"] == "handoff"].empty:
+                #     start_frame = carrier_track.loc[carrier_track["event"] == "handoff"]["frameId"].iat[0]
+                # elif not carrier_track.loc[carrier_track["event"] == "pass_outcome_caught"].empty:
+                #     start_frame = carrier_track.loc[carrier_track["event"] == "pass_outcome_caught"]["frameId"].iat[0]
                 # else:
                 #     continue
                     
