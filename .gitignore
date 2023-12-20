@@ -1,5 +1,6 @@
 # Data
 *.csv
+*.png
 
 # Virtual Environment
 /.venv
