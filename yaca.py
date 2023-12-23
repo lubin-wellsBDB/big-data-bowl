@@ -69,9 +69,9 @@ if __name__ == "__main__":
             means.append(sum(dists)/len(dists))
             occs.append(len(dists))
 
-    d = {"tacklerId": ids, "maxYata": maxes, "avgYata": means, "occurances":occs}
+    d = {"tacklerId": ids, "maxYaca": maxes, "avgYaca": means, "occurances":occs}
     df = pd.DataFrame(data=d)
-    df.to_csv("data/yata.csv", index=False)
+    df.to_csv("data/yaca.csv", index=False)
 
     plt.hist(all_dists, bins=range(1, 40))
     plt.show()
