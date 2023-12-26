@@ -1,78 +1,72 @@
-import pandas as pd
 import math
+import pandas as pd
+
 
 if __name__ == "__main__":
     tackles = pd.read_csv("data/tackles_bc_id.csv")
+    print("Read tackles")
+
     weeks = []
 
     for week in range(1, 10):
         weeks.append(pd.read_csv(f"data/tracking_week_{week}.csv"))
+    print("Read weeks")
 
-    seconds_out = .5
-    frames_out = int(seconds_out * 10)
+    tacklers = tackles.nflId.unique()
+    missed_tackles = tackles.loc[tackles["pff_missedTackle"] == 1].whole_id
 
-    while True:
-        strid = input("Enter a tackler's nflId or a non-number to quit: ")
+    ids = []
+    maxes = []
+    means = []
+    occs = []
 
-        if not strid.isdigit():
-            break
-        
-        id = int(strid)
+    for tackler in tacklers:
+        print(tackler)
+        player_tackles = tackles.loc[tackles["nflId"] == tackler].loc[tackles["pff_missedTackle"] == 0]
 
-        player_tackles = tackles.loc[tackles["nflId"] == id].loc[tackles["pff_missedTackle"] == 0]
+        dists = []
 
-        if player_tackles.empty:
-            print("Player has no tackles")
-            continue
-        
-        distances = []
-
-        for week in weeks:
-            for row in player_tackles.itertuples():
-                play = week[week["gameId"] == row.gameId].loc[week["playId"] == row.playId].loc
+        for row in player_tackles.itertuples():
+            for week in weeks:
+                play = week.loc[week["gameId"] == row.gameId].loc[week["playId"] == row.playId]
                 if play.empty:
                     # wrong week
                     continue
 
-                tackler_track = play.loc[play["nflId"] == id]
+                if str(row.gameId) + " " + str(row.playId) in missed_tackles:
+                    break # this might mess with data - unclear how first contact works
+
+                tackler_track = play.loc[play["nflId"] == row.nflId]
                 carrier_track = play.loc[play["nflId"] == row.ballCarrierId]
 
-                # if we cant find tackle_frame, skip
-                if tackler_track.loc[tackler_track["event"] == "tackle"].empty:
-                    continue
-                tackle_frame = tackler_track.loc[tackler_track["event"] == "tackle"]["frameId"].iat[0]
+                # Can do this with either the tackler or ballcarrier tracking - works either way
+                contact_row = tackler_track.loc[tackler_track["event"] == "first_contact"]
+                tackle_row = tackler_track.loc[tackler_track["event"] == "tackle"] # dont need for tracking, but using to remove outliers.
 
-                # find distance frame
-                frame_of_tackle = max(tackle_frame - frames_out, 1)
+                if contact_row.empty or tackle_row.empty:
+                    break # can't use this data - doesn't have contact or tackle labeled
 
-                # find tackler and carrier info in that frame
-                tackler_frame = tackler_track.loc[tackler_track["frameId"] == frame_of_tackle]
-                carrier_frame = carrier_track.loc[carrier_track["frameId"] == frame_of_tackle]
+                contact_frame = contact_row["frameId"].iat[0]
+                prev_frame = contact_frame - 5
+                tackle_frame = tackle_row["frameId"].iat[0]
 
-                # # if we cant find start frame, skip
-                # if not carrier_track.loc[carrier_track["event"] == "run"].empty:
-                #     start_frame = carrier_track.loc[carrier_track["event"] == "run"]["frameId"].iat[0]
-                # elif not carrier_track.loc[carrier_track["event"] == "handoff"].empty:
-                #     start_frame = carrier_track.loc[carrier_track["event"] == "handoff"]["frameId"].iat[0]
-                # elif not carrier_track.loc[carrier_track["event"] == "pass_outcome_caught"].empty:
-                #     start_frame = carrier_track.loc[carrier_track["event"] == "pass_outcome_caught"]["frameId"].iat[0]
-                # else:
-                #     continue
-                    
-                
+                carrier_row = carrier_track.loc[carrier_track["frameId"] == prev_frame]
+                tackler_row = tackler_track.loc[tackler_track["frameId"] == prev_frame]
 
-                # tackler_start = tackler_track[tackler_track["frameId"] == start_frame]
-                # carrier_start = carrier_track[carrier_track["frameId"] == start_frame]
+                if carrier_row.empty or tackler_row.empty or tackle_frame - contact_frame > 50:
+                    break
 
-                # math.sqrt((tackler_start["x"].iat[0] - carrier_start["x"].iat[0]) ** 2 + (tackler_start["y"].iat[0] - carrier_start["y"].iat[0]) ** 2)
-                distances.append(math.sqrt((tackler_frame["x"].iat[0] - carrier_frame["x"].iat[0]) ** 2 + (tackler_frame["y"].iat[0] - carrier_frame["y"].iat[0]) ** 2))
+                dist = math.sqrt((carrier_row["x"].iat[0] - tackler_row["x"].iat[0]) ** 2 
+                                 + (carrier_row["y"].iat[0] - tackler_row["y"].iat[0]) ** 2)
+                dists.append(dist)
+                break
         
-        print(max(distances))
-        print(sum(distances)/len(distances))
-        print(distances)
+        if len(dists) != 0:
+            ids.append(tackler)
+            maxes.append(max(dists))
+            means.append(sum(dists)/len(dists))
+            occs.append(len(dists))
 
-                
-                
-
-        
-
+    d = {"tacklerId": ids, "maxTackleRadius": maxes, "avgTackleRadius": means, "occurances":occs}
+    df = pd.DataFrame(data=d)
+    df.to_csv("data/tackle_radius.csv", index=False)
