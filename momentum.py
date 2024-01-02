@@ -1,6 +1,5 @@
 import math
 import pandas as pd
-import matplotlib.pyplot as plt
 
 
 if __name__ == "__main__":
@@ -16,7 +15,6 @@ if __name__ == "__main__":
     print("Read weeks")
 
     tacklers = tackles.nflId.unique()
-    missed_tackles = tackles.loc[tackles["pff_missedTackle"] == 1].whole_id
 
     ids = []
     maxes = []
@@ -26,7 +24,7 @@ if __name__ == "__main__":
 
     for tackler in tacklers:
         print(tackler)
-        player_tackles = tackles.loc[tackles["nflId"] == tackler].loc[tackles["pff_missedTackle"] == 0]
+        player_tackles = tackles.loc[tackles["nflId"] == tackler].loc[tackles["tackle"] == 1]
 
         impulses = []
 
@@ -36,9 +34,6 @@ if __name__ == "__main__":
                 if play.empty:
                     # wrong week
                     continue
-
-                if str(row.gameId) + " " + str(row.playId) in missed_tackles:
-                    break # this might mess with data - unclear how first contact works
 
                 tackler_track = play.loc[play["nflId"] == row.nflId]
                 carrier_track = play.loc[play["nflId"] == row.ballCarrierId]

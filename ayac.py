@@ -1,6 +1,5 @@
 import math
 import pandas as pd
-import matplotlib.pyplot as plt
 
 
 if __name__ == "__main__":
@@ -19,8 +18,6 @@ if __name__ == "__main__":
     maxes = []
     means = []
     occs = []
-    all_dists = []
-    all_times = []
 
     for tackler in tacklers:
         print(tackler)
@@ -39,9 +36,9 @@ if __name__ == "__main__":
                     break # this might mess with data - unclear how first contact works
 
                 tackler_track = play.loc[play["nflId"] == row.nflId]
-                carrier_track = play.loc[play["nflId"] == row.ballCarrierId]
+                football_track = play.loc[play["displayName"] == "football"]
 
-                # Can do this with either the tackler or ballcarrier tracking - works either way
+                # Can do this with either the tackler or football tracking - works either way
                 contact_row = tackler_track.loc[tackler_track["event"] == "first_contact"]
                 tackle_row = tackler_track.loc[tackler_track["event"] == "tackle"]
 
@@ -51,16 +48,23 @@ if __name__ == "__main__":
                 contact_frame = contact_row["frameId"].iat[0]
                 tackle_frame = tackle_row["frameId"].iat[0]
 
-                carrier_frame_cont = carrier_track.loc[carrier_track["frameId"] == contact_frame]
-                carrier_frame_tackle = carrier_track.loc[carrier_track["frameId"] == tackle_frame]
+                football_frame_cont = football_track.loc[football_track["frameId"] == contact_frame]
+                football_frame_tackle = football_track.loc[football_track["frameId"] == tackle_frame]
 
-                if carrier_frame_cont.empty or carrier_frame_tackle.empty or tackle_frame - contact_frame > 50:
+                if football_frame_cont.empty or football_frame_tackle.empty or tackle_frame - contact_frame > 50:
                     break
 
-                dist = math.sqrt((carrier_frame_cont["x"].iat[0] - carrier_frame_tackle["x"].iat[0]) ** 2 + (carrier_frame_cont["y"].iat[0] - carrier_frame_tackle["y"].iat[0]) ** 2)
-                dists.append(dist)
-                all_dists.append(dist)
-                all_times.append(tackle_frame - contact_frame)
+                mirror = play.loc[play["displayName"] == "football"].loc[play["frameId"] == 1]["playDirection"].iat[0] == "left"
+
+                dist = football_frame_tackle["x"].iat[0] - football_frame_cont["x"].iat[0]
+
+                if mirror:
+                    dist = -1 * dist
+                
+                if dist > 0:
+                    dists.append(dist)
+                else:
+                    dists.append(0) # forward progress
                 break
         
         if len(dists) != 0:
@@ -69,13 +73,6 @@ if __name__ == "__main__":
             means.append(sum(dists)/len(dists))
             occs.append(len(dists))
 
-    d = {"tacklerId": ids, "maxYaca": maxes, "avgYaca": means, "occurances":occs}
+    d = {"tacklerId": ids, "maxAyac": maxes, "avgAyac": means, "occurances":occs}
     df = pd.DataFrame(data=d)
-    df.to_csv("data/yaca.csv", index=False)
-
-    plt.hist(all_dists, bins=range(1, 40))
-    plt.show()
-    plt.scatter(all_times, all_dists)
-    plt.xlabel("Contact to Down Time (Frames)")
-    plt.ylabel("Contact to Down Distance (Yards)")
-    plt.show()
+    df.to_csv("data/ayac.csv", index=False)
