@@ -14,8 +14,13 @@ if __name__ == "__main__":
     print("Read plays")
 
     ids_to_data = {}
+    counter = 0
 
     for row in plays.itertuples():
+        counter += 1
+        if counter % 100 == 0:
+            print(f"{counter/len(plays)}% Done")
+
         print(f"Play: {row.gameId}{row.playId}")
         
         for week in weeks:

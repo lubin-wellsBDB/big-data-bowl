@@ -20,6 +20,7 @@ if __name__ == "__main__":
 
     ids = []
     maxes = []
+    max_play = []
     means = []
     occs = []
 
@@ -61,15 +62,16 @@ if __name__ == "__main__":
 
                 delta_velocity = math.sqrt((carrier_frame_cont["s"].iat[0] * math.cos(math.radians(carrier_frame_cont["dir"].iat[0])) - carrier_frame_next["s"].iat[0] * math.cos(math.radians(carrier_frame_next["dir"].iat[0]))) ** 2 
                                  + (carrier_frame_cont["s"].iat[0] * math.sin(math.radians(carrier_frame_cont["dir"].iat[0])) - carrier_frame_next["s"].iat[0] * math.sin(math.radians(carrier_frame_cont["dir"].iat[0]))) ** 2)
-                impulses.append(delta_velocity * players[players["nflId"] == row.ballCarrierId]["weight"].iat[0])
+                impulses.append((delta_velocity * players[players["nflId"] == row.ballCarrierId]["weight"].iat[0], str(row.gameId) + str(row.playId)))
                 break
         
         if len(impulses) != 0:
             ids.append(tackler)
-            maxes.append(max(impulses))
-            means.append(sum(impulses)/len(impulses))
+            maxes.append(max(impulses)[0])
+            max_play.append(max(impulses)[1])
+            means.append(sum([x[0] for x in impulses])/len(impulses))
             occs.append(len(impulses))
 
-    d = {"tacklerId": ids, "maxImpulse": maxes, "avgImpulse": means, "occurances":occs}
+    d = {"tacklerId": ids, "maxImpulse": maxes, "maxPlay": max_play, "avgImpulse": means, "occurances":occs}
     df = pd.DataFrame(data=d)
-    df.to_csv("data/momentum.csv", index=False)
+    df.to_csv("data/momentum_with_play.csv", index=False)
